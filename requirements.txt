@@ -1,8 +1,8 @@
-streamlit
 opencv-python-headless
 plantcv
 pandas
 numpy
 matplotlib
 seaborn
-streamlit_drawable_canvas
+streamlit==1.22.0
+streamlit-drawable-canvas==0.9.3
