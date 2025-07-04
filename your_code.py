@@ -6,9 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from plantcv.parallel import WorkflowInputs
+# from plantcv.parallel import WorkflowInputs
 from plantcv import plantcv as pcv
 import streamlit as st
+from types import SimpleNamespace
 
 # --- Replace with your functions ---
 def run_mask(folder, output_path):
@@ -24,8 +25,9 @@ def run_mask(folder, output_path):
     for file in image_files:
         
     # Our workflow, don't worry about this, as well as input/output options
-        args = WorkflowInputs(
-            images=["test.jpg"],    
+
+        args = SimpleNamespace(
+            images=["test.jpg"],
             names="image1",
             result="lettuce_results",
             outdir=".",
@@ -33,6 +35,7 @@ def run_mask(folder, output_path):
             debug="none",
             sample_label="genotype"
             )
+
         # Set debug to the global parameter 
         pcv.params.debug = args.debug
 
