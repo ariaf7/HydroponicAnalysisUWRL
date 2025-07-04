@@ -61,7 +61,7 @@ if temp_input_dir and output_folder:
             if uploaded_files:
                 # Open the first image
                 first_image = Image.open(uploaded_files[0])
-                width, height = first_image.size
+                width, height, _ = first_image.shape
 
                 st.write("Click 4 points to select your ROI (in order: top-left, top-right, bottom-right, bottom-left)")
 
@@ -89,8 +89,7 @@ if temp_input_dir and output_folder:
             else:
                 st.info("Please upload images first.")
 
-            img = first_image
-            height, width, _ = img.shape
+    
 
             # st.image(img, caption="Original Image")
 
