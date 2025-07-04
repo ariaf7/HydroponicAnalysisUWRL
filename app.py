@@ -65,21 +65,19 @@ if temp_input_dir and output_folder:
                 st.write("Click 4 points to select your ROI (in order: top-left, top-right, bottom-right, bottom-left)")
 
                 canvas_result = st_canvas(
-                    fill_color="",
-                    stroke_width=3,
+                    fill_color="rgba(0,0,0,0)",  # transparent
+                    stroke_width=2,
                     stroke_color="red",
                     background_image=first_image,
-                    height=first_image.height,
-                    width=first_image.width,
+                    height=first_image.shape[0],
+                    width=first_image.shape[1],
                     drawing_mode="point",
                     key="canvas",
-                    point_display_radius=5,
-                    # limit number of points to 4
-                    max_points=4,
+                    # <-- no max_points here
                 )
-
+                
                 if canvas_result.json_data is not None:
-                    points = canvas_result.json_data["objects"]
+                    points = canvas_result.json_data.get("objects", [])
                     if len(points) == 4:
                         # Extract (x,y) coords of the 4 points
                         roi_points = [(int(p["left"]), int(p["top"])) for p in points]
