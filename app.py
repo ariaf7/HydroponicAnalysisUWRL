@@ -70,8 +70,8 @@ if temp_input_dir and output_folder:
                     stroke_width=2,
                     stroke_color="red",
                     background_image=first_image,
-                    height=first_image.shape[0],
-                    width=first_image.shape[1],
+                    height=height,
+                    width=width,
                     drawing_mode="point",
                     key="canvas",
                     # <-- no max_points here
