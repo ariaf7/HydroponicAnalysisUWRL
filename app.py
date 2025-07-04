@@ -1,22 +1,15 @@
 
 import io
-import streamlit as st
 import os
 import tempfile
 from pathlib import Path
 from your_code import *
-import os
-
-# --- Replace with your functions ---
-
-
 import streamlit as st
 import cv2
-from pathlib import Path
 from your_code import run_cropping, run_timelapse, run_mask, run_growth
-import os
 from PIL import Image
 import numpy as np
+from streamlit_drawable_canvas import st_canvas
 
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
@@ -27,9 +20,9 @@ uploaded_files = st.file_uploader("Upload plant images (png, jpg, jpeg)", type=[
 
 if uploaded_files:
     st.write(f"Uploaded {len(uploaded_files)} file(s):")
-    for file in uploaded_files:
-        image = Image.open(file)
-        st.image(image, caption=file.name, use_column_width=True)
+    # for file in uploaded_files:
+    #     image = Image.open(file)
+    #     st.image(image, caption=file.name, use_column_width=True)
 else:
     st.info("Please upload one or more images to get started.")
 
@@ -64,21 +57,54 @@ if temp_input_dir and output_folder:
         st.warning("No images found in input folder")
     else:
         if process == "Crop":
-            img = load_image(image_files[0])
+
+            if uploaded_files:
+                # Open the first image
+                first_image = Image.open(uploaded_files[0])
+
+                st.write("Click 4 points to select your ROI (in order: top-left, top-right, bottom-right, bottom-left)")
+
+                canvas_result = st_canvas(
+                    fill_color="",
+                    stroke_width=3,
+                    stroke_color="red",
+                    background_image=first_image,
+                    height=first_image.height,
+                    width=first_image.width,
+                    drawing_mode="point",
+                    key="canvas",
+                    point_display_radius=5,
+                    # limit number of points to 4
+                    max_points=4,
+                )
+
+                if canvas_result.json_data is not None:
+                    points = canvas_result.json_data["objects"]
+                    if len(points) == 4:
+                        # Extract (x,y) coords of the 4 points
+                        roi_points = [(int(p["left"]), int(p["top"])) for p in points]
+                        st.write("ROI points:", roi_points)
+                        # You can then compute bounding rect from these points or pass them as ROI
+                    else:
+                        st.info("Please click exactly 4 points.")
+            else:
+                st.info("Please upload images first.")
+
+            img = first_image
             height, width, _ = img.shape
 
-            st.image(img, caption="Original Image")
+            # st.image(img, caption="Original Image")
 
-            x = st.slider("X", 0, width-1, 0)
-            y = st.slider("Y", 0, height-1, 0)
-            w = st.slider("Width", 1, width - x, width//3)
-            h = st.slider("Height", 1, height - y, height//3)
+            # x = st.slider("X", 0, width-1, 0)
+            # y = st.slider("Y", 0, height-1, 0)
+            # w = st.slider("Width", 1, width - x, width//3)
+            # h = st.slider("Height", 1, height - y, height//3)
 
-            cropped_img = img[y:y+h, x:x+w]
-            st.image(cropped_img, caption="Cropped Preview")
+            # cropped_img = img[y:y+h, x:x+w]
+            # st.image(cropped_img, caption="Cropped Preview")
 
             if st.button("Run Crop"):
-                run_cropping(temp_input_dir, output_folder, (x, y, w, h))
+                run_cropping(temp_input_dir, output_folder, roi_points)
                 st.success(f"✅ Cropped images saved to {output_folder}")
 
         else:
