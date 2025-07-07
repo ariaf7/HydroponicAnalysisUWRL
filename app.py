@@ -34,7 +34,7 @@ if uploaded_files:
             f.write(file.getbuffer())
 
 # Output folder text input (optional for operations other than cropping)
-output_folder = st.text_input("💾 Folder to save results")
+# output_folder = st.text_input("💾 Folder to save results")
 
 # Operation selector
 process = st.radio("Choose a function to run:", ["Crop", "Timelapse", "Mask", "Growth"])
@@ -85,19 +85,46 @@ if st.button(f"Run {process}"):
         st.error("❌ Please provide a valid mask folder path.")
     else:
         with st.spinner(f"Running {process.lower()}..."):
-            try:
-                if process == "Crop":
-                    visual_crop(uploaded_files)
-                elif process == "Timelapse":
-                    temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
-                    run_timelapse(temp_input_dir, temp_path)
-                    with open(temp_path, "rb") as f:
-                        st.download_button("Download Timelapse", f, file_name="timelapse.mp4")
-                elif process == "Mask":
-                    run_mask(temp_input_dir, output_folder)
-                    st.success("✅ Masking complete!")
-                elif process == "Growth":
-                    run_growth(temp_input_dir, mask_folder, output_folder)
+            if process == "Crop":
+                visual_crop(uploaded_files)
+            elif process == "Timelapse":
+                temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
+                run_timelapse(temp_input_dir, temp_path)
+                with open(temp_path, "rb") as f:
+                    st.download_button("Download Timelapse", f, file_name="timelapse.mp4")
+            elif process == "Mask":
+                temp_mask_dir = tempfile.mkdtemp()
+                run_mask(temp_input_dir, temp_mask_dir)
+
+                # Zip the mask outputs
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                    for root, _, files in os.walk(temp_mask_dir):
+                        for file in files:
+                            filepath = os.path.join(root, file)
+                            with open(filepath, "rb") as f:
+                                zipf.writestr(file, f.read())
+                zip_buffer.seek(0)
+                st.download_button("Download Masks as ZIP", zip_buffer, file_name="masks.zip")
+                st.success("✅ Masking complete!")
+
+            elif process == "Growth":
+                if not mask_folder:
+                    st.error("❌ Please provide a valid mask folder path.")
+                else:
+                    temp_growth_dir = tempfile.mkdtemp()
+                    run_growth(temp_input_dir, mask_folder, temp_growth_dir)
+
+                    # Zip the growth outputs
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                        for root, _, files in os.walk(temp_growth_dir):
+                            for file in files:
+                                filepath = os.path.join(root, file)
+                                with open(filepath, "rb") as f:
+                                    zipf.writestr(file, f.read())
+                    zip_buffer.seek(0)
+                    st.download_button("Download Growth Results as ZIP", zip_buffer, file_name="growth_results.zip")
                     st.success("✅ Growth analysis complete!")
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+
+
