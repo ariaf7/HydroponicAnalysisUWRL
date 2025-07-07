@@ -43,12 +43,12 @@ if process == "Growth":
     mask_folder = st.text_input("📂 Folder with masks")
 
 # Define function to run cropping with visual ROI selection and save via run_cropping
-def visual_crop(images):
+def visual_crop(images, input_dir):
     if not images:
         st.warning("Please upload images first.")
         return
 
-    first_image_path = os.path.join(temp_input_dir, images[0].name)
+    first_image_path = os.path.join(input_dir, images[0].name)
     st.write(f"🧪 Using first image: `{images[0].name}` from path: `{first_image_path}`")
     first_image = Image.open(first_image_path).convert("RGB")
     st.image(first_image, caption="Select ROI on this image")
@@ -85,7 +85,7 @@ if st.button(f"Run {process}"):
         with st.spinner(f"Running {process.lower()}..."):
             try:
                 if process == "Crop":
-                    visual_crop(uploaded_files)
+                    visual_crop(uploaded_files, temp_input_dir)
                 elif process == "Timelapse":
                     temp_path = os.path.join(tempfile.gettempdir(), f"timelapse_{session_id}.mp4")
                     run_timelapse(temp_input_dir, temp_path)
