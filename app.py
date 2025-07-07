@@ -70,7 +70,9 @@ def visual_crop(images):
         st.download_button("Download Cropped Images as ZIP", zip_buffer, file_name="cropped_images.zip")
 
 # Run the selected process
-if st.button(f"Run {process}"):
+if process == "Crop":
+    visual_crop(uploaded_files)
+elif st.button(f"Run {process}"):
     if not uploaded_files:
         st.error("❌ Please upload image files.")
     elif process == "Growth" and not (mask_folder and os.path.isdir(mask_folder)):
@@ -78,9 +80,7 @@ if st.button(f"Run {process}"):
     else:
         with st.spinner(f"Running {process.lower()}..."):
             try:
-                if process == "Crop":
-                    visual_crop(uploaded_files)
-                elif process == "Timelapse":
+                if process == "Timelapse":
                     temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
                     run_timelapse(temp_input_dir, temp_path)
                     with open(temp_path, "rb") as f:
