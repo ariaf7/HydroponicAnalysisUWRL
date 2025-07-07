@@ -4,5 +4,5 @@ pandas
 numpy
 matplotlib
 seaborn
-streamlit==1.22.0
+streamlit
 streamlit-drawable-canvas==0.9.3
