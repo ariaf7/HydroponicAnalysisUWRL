@@ -12,10 +12,6 @@ from PIL import Image
 import numpy as np
 import zipfile
 
-
-
-
-
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
 
@@ -33,9 +29,6 @@ if uploaded_files:
         with open(os.path.join(temp_input_dir, file.name), "wb") as f:
             f.write(file.getbuffer())
 
-# Output folder text input (optional for operations other than cropping)
-# output_folder = st.text_input("💾 Folder to save results")
-
 # Operation selector
 process = st.radio("Choose a function to run:", ["Crop", "Timelapse", "Mask", "Growth"])
 
@@ -44,13 +37,14 @@ mask_folder = None
 if process == "Growth":
     mask_folder = st.text_input("📂 Folder with masks")
 
-# Define function to run cropping with visual ROI selection
+# Define function to run cropping with visual ROI selection and save via run_cropping
 def visual_crop(images):
     if not images:
         st.warning("Please upload images first.")
         return
 
-    first_image = Image.open(images[0]).convert("RGB")
+    first_image_path = os.path.join(temp_input_dir, images[0].name)
+    first_image = Image.open(first_image_path).convert("RGB")
     st.image(first_image, caption="Select ROI on this image")
 
     st.subheader("✂️ Enter crop region of interest (ROI)")
@@ -60,19 +54,17 @@ def visual_crop(images):
     h = st.number_input("Crop Height", min_value=1, value=100)
 
     if st.button("Crop and Download"):
-        output_images = []
-        for file in images:
-            image = Image.open(file).convert("RGB")
-            cropped = image.crop((x, y, x + w, y + h))
+        temp_output_dir = os.path.join(tempfile.gettempdir(), "cropped_output")
+        os.makedirs(temp_output_dir, exist_ok=True)
 
-            buf = io.BytesIO()
-            cropped.save(buf, format="PNG")
-            output_images.append((file.name, buf.getvalue()))
+        roi = (x, y, w, h)
+        run_cropping(temp_input_dir, temp_output_dir, roi=roi)
 
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w") as zipf:
-            for name, data in output_images:
-                zipf.writestr(name, data)
+            for file in os.listdir(temp_output_dir):
+                with open(os.path.join(temp_output_dir, file), "rb") as f:
+                    zipf.writestr(file, f.read())
         zip_buffer.seek(0)
 
         st.download_button("Download Cropped Images as ZIP", zip_buffer, file_name="cropped_images.zip")
@@ -85,46 +77,40 @@ if st.button(f"Run {process}"):
         st.error("❌ Please provide a valid mask folder path.")
     else:
         with st.spinner(f"Running {process.lower()}..."):
-            if process == "Crop":
-                visual_crop(uploaded_files)
-            elif process == "Timelapse":
-                temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
-                run_timelapse(temp_input_dir, temp_path)
-                with open(temp_path, "rb") as f:
-                    st.download_button("Download Timelapse", f, file_name="timelapse.mp4")
-            elif process == "Mask":
-                temp_mask_dir = tempfile.mkdtemp()
-                run_mask(temp_input_dir, temp_mask_dir)
-
-                # Zip the mask outputs
-                zip_buffer = io.BytesIO()
-                with zipfile.ZipFile(zip_buffer, "w") as zipf:
-                    for root, _, files in os.walk(temp_mask_dir):
-                        for file in files:
-                            filepath = os.path.join(root, file)
-                            with open(filepath, "rb") as f:
-                                zipf.writestr(file, f.read())
-                zip_buffer.seek(0)
-                st.download_button("Download Masks as ZIP", zip_buffer, file_name="masks.zip")
-                st.success("✅ Masking complete!")
-
-            elif process == "Growth":
-                if not mask_folder:
-                    st.error("❌ Please provide a valid mask folder path.")
-                else:
-                    temp_growth_dir = tempfile.mkdtemp()
-                    run_growth(temp_input_dir, mask_folder, temp_growth_dir)
-
-                    # Zip the growth outputs
+            try:
+                if process == "Crop":
+                    visual_crop(uploaded_files)
+                elif process == "Timelapse":
+                    temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
+                    run_timelapse(temp_input_dir, temp_path)
+                    with open(temp_path, "rb") as f:
+                        st.download_button("Download Timelapse", f, file_name="timelapse.mp4")
+                elif process == "Mask":
+                    temp_output_dir = os.path.join(tempfile.gettempdir(), "mask_output")
+                    os.makedirs(temp_output_dir, exist_ok=True)
+                    run_mask(temp_input_dir, temp_output_dir)
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zipf:
-                        for root, _, files in os.walk(temp_growth_dir):
-                            for file in files:
-                                filepath = os.path.join(root, file)
-                                with open(filepath, "rb") as f:
-                                    zipf.writestr(file, f.read())
+                        for file in os.listdir(temp_output_dir):
+                            with open(os.path.join(temp_output_dir, file), "rb") as f:
+                                zipf.writestr(file, f.read())
+                    zip_buffer.seek(0)
+                    st.download_button("Download Masked Images as ZIP", zip_buffer, file_name="masked_images.zip")
+                    st.success("✅ Masking complete!")
+                elif process == "Growth":
+                    temp_output_dir = os.path.join(tempfile.gettempdir(), "growth_output")
+                    os.makedirs(temp_output_dir, exist_ok=True)
+                    run_growth(temp_input_dir, mask_folder, temp_output_dir)
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                        for file in os.listdir(temp_output_dir):
+                            with open(os.path.join(temp_output_dir, file), "rb") as f:
+                                zipf.writestr(file, f.read())
                     zip_buffer.seek(0)
                     st.download_button("Download Growth Results as ZIP", zip_buffer, file_name="growth_results.zip")
                     st.success("✅ Growth analysis complete!")
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+
 
 
