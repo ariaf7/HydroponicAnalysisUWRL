@@ -12,6 +12,7 @@ from PIL import Image
 import numpy as np
 import zipfile
 import shutil
+import uuid
 
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
