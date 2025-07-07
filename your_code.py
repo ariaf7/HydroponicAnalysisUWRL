@@ -322,10 +322,11 @@ def run_cropping(input_folder, output_folder, roi):
         cropped = image[int(y):int(y + h), int(x):int(x + w)]
         filename = os.path.basename(file)
         output_path = os.path.join(output_folder, filename)
+        print(output_path)
         cv2.imwrite(output_path, cropped)
 
         if not first_previewed:
-            st.image(cropped[:, :, ::-1], caption=f"Preview: {filename} (cropped)", channels="RGB")
+            st.image(cropped[:, :, ::-1], caption=f"Preview: {filename} (cropped)", use_container_width= None, channels="RGB")
             first_previewed = True
 
     st.success(f"✅ Cropping complete! Images saved to: `{output_folder}`")
