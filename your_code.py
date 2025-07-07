@@ -293,46 +293,40 @@ def run_cropping(input_folder, output_folder, roi):
     Crop all images in a folder using the provided ROI (x, y, w, h) and save them to the output folder.
     The first cropped image will be displayed using Streamlit.
     """
-    for filename in os.listdir(input_folder):
-        if not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+    st.write(f"📸 Cropping images in: `{input_folder}` using ROI: `{roi}`")
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
+
+    # Validate ROI
+    if not isinstance(roi, tuple) or len(roi) != 4:
+        st.error("❌ Invalid ROI format. Must be a tuple of (x, y, w, h).")
+        return
+
+    # Find image files
+    image_extensions = ['*.png', '*.jpg', '*.jpeg']
+    image_files = []
+    for ext in image_extensions:
+        image_files.extend(glob.glob(os.path.join(input_folder, ext)))
+
+    if not image_files:
+        st.error("❌ No image files found.")
+        return
+
+    first_previewed = False
+    for file in image_files:
+        print(f"Cropping file: {file}")
+        image = cv2.imread(file)
+        if image is None:
+            st.warning(f"Skipping unreadable file: {file}")
             continue
-        print(f"Cropping file: {filename}")
-    # rest of code ...
 
-        st.write(f"📸 Cropping images in: `{input_folder}` using ROI: `{roi}`")
-        Path(output_folder).mkdir(parents=True, exist_ok=True)
+        x, y, w, h = roi
+        cropped = image[int(y):int(y + h), int(x):int(x + w)]
+        filename = os.path.basename(file)
+        output_path = os.path.join(output_folder, filename)
+        cv2.imwrite(output_path, cropped)
 
-        # Validate ROI
-        if not isinstance(roi, tuple) or len(roi) != 4:
-            st.error("❌ Invalid ROI format. Must be a tuple of (x, y, w, h).")
-            return
+        if not first_previewed:
+            st.image(cropped[:, :, ::-1], caption=f"Preview: {filename} (cropped)", use_container_width=True, channels="RGB")
+            first_previewed = True
 
-        # Find image files
-        image_extensions = ['*.png', '*.jpg', '*.jpeg']
-        image_files = []
-        for ext in image_extensions:
-            image_files.extend(glob.glob(os.path.join(input_folder, ext)))
-
-        if not image_files:
-            st.error("❌ No image files found.")
-            return
-
-        first_previewed = False
-        for file in image_files:
-            image = cv2.imread(file)
-            if image is None:
-                st.warning(f"Skipping unreadable file: {file}")
-                continue
-
-            x, y, w, h = roi
-            cropped = image[int(y):int(y + h), int(x):int(x + w)]
-            filename = os.path.basename(file)
-            output_path = os.path.join(output_folder, filename)
-            print(output_path)
-            cv2.imwrite(output_path, cropped)
-
-            if not first_previewed:
-                st.image(cropped[:, :, ::-1], caption=f"Preview: {filename} (cropped)", use_container_width= None, channels="RGB")
-                first_previewed = True
-
-        st.success(f"✅ Cropping complete! Images saved to: `{output_folder}`")
+    st.success(f"✅ Cropping complete! Images saved to: `{output_folder}`")
