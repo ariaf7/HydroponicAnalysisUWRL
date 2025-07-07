@@ -11,6 +11,7 @@ from your_code import run_cropping, run_timelapse, run_mask, run_growth
 from PIL import Image
 import numpy as np
 import zipfile
+import shutil
 
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
@@ -21,13 +22,20 @@ st.markdown("Upload or specify folders to process your plant images.")
 uploaded_files = st.file_uploader("Upload images", accept_multiple_files=True, type=["png", "jpg", "jpeg"])
 
 # Save uploaded files temporarily
+
+# Save uploaded files temporarily
 temp_input_dir = "temp_uploaded_images"
+
+# ✅ Clear previously uploaded files
+if os.path.exists(temp_input_dir):
+    shutil.rmtree(temp_input_dir)
 os.makedirs(temp_input_dir, exist_ok=True)
 
 if uploaded_files:
     for file in uploaded_files:
         with open(os.path.join(temp_input_dir, file.name), "wb") as f:
             f.write(file.getbuffer())
+
 
 # Operation selector
 process = st.radio("Choose a function to run:", ["Crop", "Timelapse", "Mask", "Growth"])
