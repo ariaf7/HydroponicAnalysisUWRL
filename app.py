@@ -7,7 +7,7 @@ from pathlib import Path
 from your_code import *
 import streamlit as st
 import cv2
-from your_code import run_cropping, run_timelapse, run_mask, run_growth
+from your_code import run_timelapse, run_mask, run_growth
 from PIL import Image
 import numpy as np
 import zipfile
