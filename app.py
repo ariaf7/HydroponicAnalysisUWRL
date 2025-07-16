@@ -14,7 +14,6 @@ import zipfile
 import shutil
 import uuid
 
-
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
 
@@ -24,7 +23,7 @@ st.markdown("Upload or specify folders to process your plant images.")
 uploaded_files = st.file_uploader("Upload images", accept_multiple_files=True, type=["png", "jpg", "jpeg"])
 
 # Save uploaded files temporarily
-temp_input_dir = "temp_uploaded_images"
+temp_input_dir = os.path.join(tempfile.gettempdir(), "temp_uploaded_images")
 os.makedirs(temp_input_dir, exist_ok=True)
 
 if uploaded_files:
@@ -33,49 +32,12 @@ if uploaded_files:
             f.write(file.getbuffer())
 
 # Operation selector
-process = st.radio("Choose a function to run:", ["Crop", "Timelapse", "Mask", "Growth"])
+process = st.radio("Choose a function to run:", ["Timelapse", "Mask", "Growth"])
 
 # Optional mask folder input for Growth operation
 mask_folder = None
 if process == "Growth":
     mask_folder = st.text_input("📂 Folder with masks")
-
-# Define function to run cropping with live preview and download
-def visual_crop(images, input_dir):
-    if not images:
-        st.warning("Please upload images first.")
-        return
-
-    first_image_path = os.path.join(input_dir, images[0].name)
-    first_image = Image.open(first_image_path).convert("RGB")
-    st.image(first_image, caption="Select ROI on this image")
-
-    st.subheader("✂️ Enter crop region of interest (ROI)")
-    x = st.number_input("Crop X", min_value=0, value=0, key="crop_x")
-    y = st.number_input("Crop Y", min_value=0, value=0, key="crop_y")
-    w = st.number_input("Crop Width", min_value=1, value=100, key="crop_w")
-    h = st.number_input("Crop Height", min_value=1, value=100, key="crop_h")
-
-    # Show live preview
-    preview_array = first_image.copy()
-    preview_cropped = preview_array.crop((x, y, x + w, y + h))
-    st.image(preview_cropped, caption="📸 Live Cropped Preview", use_column_width=True)
-
-    if st.button("Crop and Download"):
-        roi = (x, y, w, h)
-        temp_output_dir = os.path.join(tempfile.gettempdir(), "cropped_output")
-        os.makedirs(temp_output_dir, exist_ok=True)
-
-        run_cropping(input_dir, temp_output_dir, roi=roi)
-
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w") as zipf:
-            for file in os.listdir(temp_output_dir):
-                with open(os.path.join(temp_output_dir, file), "rb") as f:
-                    zipf.writestr(file, f.read())
-        zip_buffer.seek(0)
-
-        st.download_button("Download Cropped Images as ZIP", zip_buffer, file_name="cropped_images.zip")
 
 # Run the selected process
 if st.button(f"Run {process}"):
@@ -86,9 +48,7 @@ if st.button(f"Run {process}"):
     else:
         with st.spinner(f"Running {process.lower()}..."):
             try:
-                if process == "Crop":
-                    visual_crop(uploaded_files, temp_input_dir)
-                elif process == "Timelapse":
+                if process == "Timelapse":
                     temp_path = os.path.join(tempfile.gettempdir(), "timelapse.mp4")
                     run_timelapse(temp_input_dir, temp_path)
                     with open(temp_path, "rb") as f:
@@ -119,4 +79,3 @@ if st.button(f"Run {process}"):
                     st.success("✅ Growth analysis complete!")
             except Exception as e:
                 st.error(f"❌ Error: {e}")
-
