@@ -59,9 +59,12 @@ if st.button(f"Run {process}"):
                     run_mask(temp_input_dir, temp_output_dir)
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zipf:
-                        for file in os.listdir(temp_output_dir):
-                            with open(os.path.join(temp_output_dir, file), "rb") as f:
-                                zipf.writestr(file, f.read())
+                       for file in os.listdir(temp_output_dir):
+                            file_path = os.path.join(temp_output_dir, file)
+                            if os.path.isfile(file_path):  # ✅ Only include actual files
+                                with open(file_path, "rb") as f:
+                                    zipf.writestr(file, f.read())
+
                     zip_buffer.seek(0)
                     st.download_button("Download Masked Images as ZIP", zip_buffer, file_name="masked_images.zip")
                     st.success("✅ Masking complete!")
