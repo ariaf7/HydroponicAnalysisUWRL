@@ -35,15 +35,22 @@ if uploaded_files:
 process = st.radio("Choose a function to run:", ["Timelapse", "Mask", "Growth"])
 
 # Optional mask folder input for Growth operation
-mask_folder = None
+uploaded_masks = []
 if process == "Growth":
-    mask_folder = st.text_input("📂 Folder with masks")
+    uploaded_masks = st.file_uploader(
+        "Upload mask images (must contain 'mask' in filename)",
+        type=["jpg", "png"],
+        accept_multiple_files=True
+    )
+    # Filter only files that contain "mask" in their name
+    uploaded_masks = [f for f in uploaded_masks if "mask" in f.name.lower()]
+
 
 # Run the selected process
 if st.button(f"Run {process}"):
     if not uploaded_files:
         st.error("❌ Please upload image files.")
-    elif process == "Growth" and not (mask_folder and os.path.isdir(mask_folder)):
+    elif process == "Growth" and not uploaded_masks:
         st.error("❌ Please provide a valid mask folder path.")
     else:
         with st.spinner(f"Running {process.lower()}..."):
@@ -68,9 +75,19 @@ if st.button(f"Run {process}"):
                     st.download_button("Download Masked Images as ZIP", zip_buffer, file_name="masked_images.zip")
                     st.success("✅ Masking complete!")
                 elif process == "Growth":
+                    temp_mask_dir = os.path.join(tempfile.gettempdir(), "temp_uploaded_masks")
+                    os.makedirs(temp_mask_dir, exist_ok=True)
+
+                    # Save uploaded mask files
+                    for file in uploaded_masks:
+                        if "mask" in file.name.lower():
+                            with open(os.path.join(temp_mask_dir, file.name), "wb") as f:
+                                f.write(file.getbuffer())
+
                     temp_output_dir = os.path.join(tempfile.gettempdir(), "growth_output")
                     os.makedirs(temp_output_dir, exist_ok=True)
-                    run_growth(temp_input_dir, mask_folder, temp_output_dir)
+                    run_growth(temp_input_dir, temp_mask_dir, temp_output_dir)
+
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zipf:
                         for file in os.listdir(temp_output_dir):
