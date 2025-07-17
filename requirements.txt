@@ -1,6 +1,5 @@
 opencv-python-headless
-plantcv
-plantcv.parallel
+plantcv == 4.3.1
 pandas
 numpy
 matplotlib
