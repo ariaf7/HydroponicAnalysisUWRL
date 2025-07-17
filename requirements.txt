@@ -1,5 +1,6 @@
 opencv-python-headless
 plantcv
+plantcv.parallel
 pandas
 numpy
 matplotlib
