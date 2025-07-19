@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-# from plantcv.parallel import WorkflowInputs
+from plantcv.parallel import WorkflowInputs
 from plantcv import plantcv as pcv
 import streamlit as st
 from types import SimpleNamespace
