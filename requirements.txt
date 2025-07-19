@@ -1,5 +1,5 @@
 opencv-python-headless
-plantcv == 3.12.0
+plantcv
 pandas
 numpy
 matplotlib
