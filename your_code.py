@@ -151,8 +151,8 @@ def run_growth(folder, mask_folder, output_folder):
         shape_img = pcv.analyze.color(rgb_img=img, labeled_mask=most_recent_slice, n_labels=18, colorspaces="RGB")
 
         # Save outputs with ALL the color and size data to a .csv file to pick apart later for each date
-        print(output_folder + '/'+args.result+ '_'+ name.split(f'{folder}/')[1].split('.')[0] + '.csv')
-        pcv.outputs.save_results(filename = output_folder + '/'+args.result+ '_'+ name.split(f'{folder}/')[1].split('.')[0] + '.csv', outformat="CSV")
+        print(output_folder + '/'+"lettuce_results"+ '_'+ name.split(f'{folder}/')[1].split('.')[0] + '.csv')
+        pcv.outputs.save_results(filename = output_folder + '/'+"lettuce_results"+ '_'+ name.split(f'{folder}/')[1].split('.')[0] + '.csv', outformat="CSV")
         count +=1  
     # Now for grabbing the data we want from the csv files that were created for each picture and its date
     # Creates a variable from the folder from which we're getting our .csv files to mash together
