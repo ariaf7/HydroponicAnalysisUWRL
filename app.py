@@ -86,7 +86,13 @@ if st.button(f"Run {process}"):
 
                     temp_output_dir = os.path.join(tempfile.gettempdir(), "growth_output")
                     os.makedirs(temp_output_dir, exist_ok=True)
-                    run_growth(temp_input_dir, temp_mask_dir, temp_output_dir)
+                    try:
+                        run_growth(temp_input_dir, temp_mask_dir, temp_output_dir)
+                    except Exception as e:
+                        import traceback
+                        st.error(f"❌ Growth analysis failed: {e}")
+                        st.text(traceback.format_exc())
+                        raise
 
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zipf:
