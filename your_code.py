@@ -6,8 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
-from plantcv import plantcv as pcv
-import streamlit as st
+import plantcv as pcv
 from types import SimpleNamespace
 import traceback
 
