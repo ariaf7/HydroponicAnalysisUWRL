@@ -96,9 +96,12 @@ if st.button(f"Run {process}"):
 
                     zip_buffer = io.BytesIO()
                     with zipfile.ZipFile(zip_buffer, "w") as zipf:
-                        for file in os.listdir(temp_output_dir):
-                            with open(os.path.join(temp_output_dir, file), "rb") as f:
-                                zipf.writestr(file, f.read())
+                        for root, _, files in os.walk(temp_output_dir):
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                arcname = os.path.relpath(file_path, temp_output_dir)
+                                zipf.write(file_path, arcname)
+
                     zip_buffer.seek(0)
                     st.download_button("Download Growth Results as ZIP", zip_buffer, file_name="growth_results.zip")
                     st.success("✅ Growth analysis complete!")

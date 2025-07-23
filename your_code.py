@@ -86,6 +86,8 @@ def run_mask(folder, output_path):
     print(f"✅ Masking complete! Images saved to: {output_folder}")        
 
 def run_growth(folder, mask_folder, output_folder):
+    csv_output_dir = os.path.join(output_folder, "csv_temp")
+    os.makedirs(csv_output_dir, exist_ok=True)
     try:
         print("🔁 Starting run_growth")
         count = 0
@@ -138,7 +140,7 @@ def run_growth(folder, mask_folder, output_folder):
             shape_img = pcv.analyze.size(img=img, labeled_mask=most_recent_slice, n_labels=18)
             shape_img = pcv.analyze.color(rgb_img=img, labeled_mask=most_recent_slice, n_labels=18, colorspaces="RGB")
 
-            out_csv = os.path.join(output_folder, f"lettuce_results_{Path(name).stem}.csv")
+            out_csv = os.path.join(csv_output_dir, f"lettuce_results_{Path(name).stem}.csv")
             print(f"💾 Saving CSV to: {out_csv}")
             pcv.outputs.save_results(filename=out_csv, outformat="CSV")
             count += 1
@@ -146,7 +148,8 @@ def run_growth(folder, mask_folder, output_folder):
         # Compile CSVs
         print("\n📁 Compiling CSV files...")
         dfs = []
-        for file in glob.glob(os.path.join(output_folder, '*.csv')):
+        input_directory2 = csv_output_dir
+        for file in glob.glob(os.path.join(input_directory2, '*.csv')):
             df = pd.read_csv(file, delimiter=',')
             print(f"📄 Reading: {file}")
             try:
@@ -159,35 +162,54 @@ def run_growth(folder, mask_folder, output_folder):
             df = df[(df['trait'] != 'red_frequencies') & (df['trait'] != 'blue_frequencies')]
             dfs.append(df)
 
+        # Create and save master CSV
         master_csv_path = os.path.join(output_folder, 'Master.csv')
         pd.concat(dfs).to_csv(master_csv_path, index=False)
         print(f"✅ Saved master CSV to {master_csv_path}")
 
-        # Plotting
+        # Read it back in for plotting
         print("📈 Generating plots...")
         df = pd.read_csv(master_csv_path)
+
         df_original = df.copy()
 
+        # Create subfolders for plots
+        green_plot_dir = os.path.join(output_folder, "green_freqs")
+        area_plot_dir = os.path.join(output_folder, "area_plots")
+        os.makedirs(green_plot_dir, exist_ok=True)
+        os.makedirs(area_plot_dir, exist_ok=True)
+
+        # Loop through plants and create plots
         for plant in df_original['sample'].unique():
+            # GREEN FREQS PLOT
             sns.lineplot(
                 data=df_original[(df_original['sample'] == plant) & (df_original['trait'] == 'green_frequencies')],
-                x='label', y='value', hue='date')
+                x='label',
+                y='value',
+                hue='date'
+            )
             plt.title(plant)
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
             plt.xlabel('Green Frequencies')
             plt.ylabel('Percent of Pixels')
-            plt.savefig(os.path.join(output_folder, f'{plant}_green_freqs.png'), bbox_inches='tight')
+            green_path = os.path.join(green_plot_dir, f"{plant}_green_freqs.png")
+            plt.savefig(green_path, bbox_inches='tight')
             plt.clf()
 
+            # AREA PLOT
             df = df.sort_values(by='date')
             sns.lineplot(
                 data=df[(df['sample'] == plant) & (df['trait'] == 'area')],
-                x='date', y='value')
-            plt.title(f'{plant} area')
-            plt.ylabel('Area in pixels')
+                x='date',
+                y='value'
+            )
+            plt.title(f"{plant} area")
+            plt.ylabel("Area in pixels")
             plt.xticks(rotation=45)
-            plt.savefig(os.path.join(output_folder, f'{plant}_area.png'), bbox_inches='tight')
+            area_path = os.path.join(area_plot_dir, f"{plant}_area.png")
+            plt.savefig(area_path, bbox_inches='tight')
             plt.clf()
+
         print("✅ Growth analysis complete!")
     except Exception as e:
         print("❌ Exception occurred in run_growth:")
