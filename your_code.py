@@ -37,7 +37,7 @@ def run_mask(folder, output_path):
             )
 
         # Set debug to the global parameter 
-        pcv.params.debug = args.debug
+        pcv.params.debug = "none"
 
         
     # Read image in called "file", which "file" is our looping variable, which is the image we are currently looping by
