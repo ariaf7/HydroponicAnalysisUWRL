@@ -1,18 +1,19 @@
-
 import io
 import os
 import tempfile
-from io import BytesIO
-from pathlib import Path
 from your_code import *
 import streamlit as st
-import cv2
-from your_code import run_timelapse, run_mask, run_growth
-from PIL import Image
-import numpy as np
+print("✅ Starting app.py")
+try:
+    from your_code import run_growth, run_mask, run_timelapse
+    print("✅ Imported your_code.py successfully")
+except Exception as e:
+    print("❌ Import failed")
+    import traceback
+    traceback.print_exc()
+
 import zipfile
-import shutil
-import uuid
+
 
 st.set_page_config(page_title="Hydroponic Image Processor", layout="centered")
 st.title("🌿 Hydroponic Image Processor")
