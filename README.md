@@ -15,6 +15,4 @@ Masking/growth charts: Make sure the cropped images are the uploaded images (rel
 ## Link to the Render site
 
 https://hydroponicssysgui.onrender.com/ 
-=======
-# HydroponicSystems-
->>>>>>> e06cf50daeda9d5569771c80073cbec30ae77cfc
+
